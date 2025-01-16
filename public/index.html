@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bulk Messenger</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-6">WhatsApp Bulk Messenger</h1>
+        
+        <form id="messageForm" class="space-y-4">
+            <div>
+                <label class="block mb-2">Upload Contact List (Excel)</label>
+                <input type="file" id="contactFile" accept=".xlsx,.xls" class="w-full p-2 border rounded">
+            </div>
+            
+            <div>
+                <label class="block mb-2">Message</label>
+                <textarea id="message" rows="4" class="w-full p-2 border rounded"></textarea>
+            </div>
+            
+            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                Send Messages
+            </button>
+        </form>
+
+        <div id="report" class="mt-6 hidden">
+            <h2 class="text-xl font-bold mb-4">Sending Report</h2>
+            <div id="reportContent" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('messageForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('contactFile', document.getElementById('contactFile').files[0]);
+            
+            // Upload file and get contacts
+            const uploadResponse = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            const uploadData = await uploadResponse.json();
+            
+            if (!uploadData.success) {
+                alert('Error uploading file');
+                return;
+            }
+            
+            // Send messages
+            const message = document.getElementById('message').value;
+            const sendResponse = await fetch('/send-messages', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    contacts: uploadData.contacts,
+                    message
+                })
+            });
+            const sendData = await sendResponse.json();
+            
+            // Display report
+            const reportDiv = document.getElementById('report');
+            const reportContent = document.getElementById('reportContent');
+            reportDiv.classList.remove('hidden');
+            
+            reportContent.innerHTML = `
+                <p>Total messages: ${sendData.report.total}</p>
+                <p>Successful: ${sendData.report.successful}</p>
+                <p>Failed: ${sendData.report.failed}</p>
+                <div class="mt-4">
+                    <h3 class="font-bold">Details:</h3>
+                    <ul class="list-disc pl-5">
+                        ${sendData.report.details.map(detail => `
+                            <li class="${detail.status === 'success' ? 'text-green-600' : 'text-red-600'}">
+                                ${detail.name} (${detail.number}): ${detail.status}
+                                ${detail.error ? `- Error: ${detail.error}` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
