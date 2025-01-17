@@ -9,18 +9,18 @@
 <body class="bg-gray-100 p-8">
     <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <h1 class="text-2xl font-bold mb-6">WhatsApp Bulk Messenger</h1>
-        
+
         <form id="messageForm" class="space-y-4">
             <div>
                 <label class="block mb-2">Upload Contact List (Excel)</label>
                 <input type="file" id="contactFile" accept=".xlsx,.xls" class="w-full p-2 border rounded">
             </div>
-            
+
             <div>
                 <label class="block mb-2">Message</label>
                 <textarea id="message" rows="4" class="w-full p-2 border rounded"></textarea>
             </div>
-            
+
             <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
                 Send Messages
             </button>
@@ -35,22 +35,22 @@
     <script>
         document.getElementById('messageForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
+
             const formData = new FormData();
             formData.append('contactFile', document.getElementById('contactFile').files[0]);
-            
+
             // Upload file and get contacts
             const uploadResponse = await fetch('/upload', {
                 method: 'POST',
                 body: formData
             });
             const uploadData = await uploadResponse.json();
-            
+
             if (!uploadData.success) {
                 alert('Error uploading file');
                 return;
             }
-            
+
             // Send messages
             const message = document.getElementById('message').value;
             const sendResponse = await fetch('/send-messages', {
@@ -64,16 +64,18 @@
                 })
             });
             const sendData = await sendResponse.json();
-            
+
             // Display report
             const reportDiv = document.getElementById('report');
             const reportContent = document.getElementById('reportContent');
             reportDiv.classList.remove('hidden');
-            
+
             reportContent.innerHTML = `
                 <p>Total messages: ${sendData.report.total}</p>
                 <p>Successful: ${sendData.report.successful}</p>
                 <p>Failed: ${sendData.report.failed}</p>
+                <p>Not Registered: ${sendData.report.notRegistered}</p>
+
                 <div class="mt-4">
                     <h3 class="font-bold">Details:</h3>
                     <ul class="list-disc pl-5">

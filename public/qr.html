@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp QR Code</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+        }
+
+        #qrcode {
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .connecting {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .ready {
+            background-color: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+<div id="qrcode"></div>
+<div id="status" class="status connecting">Waiting for QR Code...</div>
+
+<script>
+    const socket = io();
+    const qrContainer = document.getElementById('qrcode');
+    const statusElement = document.getElementById('status');
+    let qrcode = null;
+
+    socket.on('qr', (qr) => {
+        statusElement.textContent = 'Scan this QR code with WhatsApp';
+        statusElement.className = 'status connecting';
+
+        // Clear previous QR code
+        qrContainer.innerHTML = '';
+
+        // Generate new QR code
+        qrcode = new QRCode(qrContainer, {
+            text: qr,
+            width: 256,
+            height: 256,
+            colorDark: '#000000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H
+        });
+    });
+
+    socket.on('ready', () => {
+        qrContainer.innerHTML = '';
+        statusElement.textContent = 'WhatsApp Connected Successfully!';
+        statusElement.className = 'status ready';
+    });
+
+    socket.on('connect', () => {
+        console.log('Connected to server');
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Disconnected from server');
+        statusElement.textContent = 'Disconnected from server...';
+        statusElement.className = 'status connecting';
+    });
+</script>
+</body>
+</html>
