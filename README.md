@@ -1,16 +1,17 @@
 # WhatsApp Bulk Messenger
 
-A Node.js application that enables sending bulk WhatsApp messages using the official WhatsApp Business API. Upload an Excel file with contact details, compose your message, and send it to multiple recipients while getting detailed delivery reports.
+A Node.js application that enables sending bulk WhatsApp messages using the WhatsApp Web API. Upload an Excel file with contact details, compose your message, and send it to multiple recipients while getting detailed delivery reports.
 
 ## Features
 
+- Web-based QR code authentication
+- Real-time client connection status display
 - Excel file upload for contact management
 - Web-based user interface
 - Real-time delivery status tracking
 - Detailed sending reports
 - Rate limiting to comply with WhatsApp policies
 - Error handling and retry mechanism
-- WhatsApp Web authentication using QR code
 
 ## Prerequisites
 
@@ -24,7 +25,7 @@ Before running this application, make sure you have the following installed:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/saad4s/WhatsApp-Bulk-Messenger.git
+git clone https://github.com/saad4s/whatsapp-bulk-messenger.git
 cd whatsapp-bulk-messenger
 ```
 
@@ -63,19 +64,43 @@ mkdir uploads
 node index.js
 ```
 
-2. Scan the QR code:
-   - When you first run the application, a QR code will appear in the terminal
+2. Access the web interface:
+   - Open your browser and go to `http://localhost:3000`
+   - The interface will display two main sections:
+     - Left: Main interface for QR code/message sending
+     - Right: Client connection status
+
+3. Connect WhatsApp:
+   - A QR code will be displayed in the web interface
    - Open WhatsApp on your phone
    - Go to Settings > WhatsApp Web/Desktop
    - Scan the QR code
-   - Wait for authentication confirmation
+   - The status panel will show "Is Client Ready: True" when connected
+   - The interface will automatically switch to the message form
 
-3. Access the web interface:
-   - Open your browser and go to `http://localhost:3000`
+4. Send Messages:
    - Upload your Excel file with contacts
    - Type your message
    - Click "Send Messages"
    - Monitor the sending report for status updates
+
+## Interface Components
+
+1. Status Panel:
+   - Shows real-time WhatsApp client connection status
+   - Green "True" indicates active connection
+   - Red "False" indicates no connection
+
+2. Main Interface:
+   - QR Code section (initially)
+   - Message form (after connection):
+     - Excel file upload
+     - Message input
+     - Send button
+   - Sending report section:
+     - Total messages count
+     - Success/failure statistics
+     - Detailed delivery status for each contact
 
 ## WhatsApp Policies and Limitations
 
@@ -88,56 +113,11 @@ Please be aware of WhatsApp's usage policies:
 
 ## Contributing
 
-We welcome contributions! Here's how you can help:
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/AmazingFeature`
-3. Commit your changes: `git commit -m 'Add some AmazingFeature'`
-4. Push to the branch: `git push origin feature/AmazingFeature`
-5. Open a Pull Request
-
-### Areas for Contribution
-
-- UI/UX improvements
-- Additional message templates
-- Better error handling
-- Rate limiting improvements
-- Documentation updates
-- Test coverage
-- Support for different file formats
-- Message scheduling features
-
-## Development
-
-To set up the development environment:
-
-1. Clone the repository
-2. Install dependencies
-3. Create a `.env` file based on `.env.example`
-4. Run in development mode:
-```bash
-npm run dev
-```
-
-### Project Structure
-
-```
-project/
-├── index.js              # Main application file
-├── public/              
-│   └── index.html       # Web interface
-├── uploads/             # Temporary file storage
-├── package.json         # Project dependencies
-└── README.md           # Documentation
-```
-
-## Testing
-
-Currently, the project doesn't include automated tests. Contributions in this area are welcome!
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for details on:
+- Code of conduct
+- Development setup
+- Pull request process
+- Coding standards
 
 ## Security
 
@@ -151,7 +131,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 If you need help or have questions:
 1. Check existing issues or create a new one
 2. Join our discussion forum (coming soon)
-3. Read the WhatsApp Business API documentation
+3. Read the WhatsApp Web API documentation
 
 ## Roadmap
 
@@ -164,6 +144,10 @@ Future improvements planned:
 - [ ] Message customization
 - [ ] Automated testing
 - [ ] Docker support
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 
