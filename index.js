@@ -2,7 +2,7 @@ const express = require('express');
 const multer = require('multer');
 const xlsx = require('xlsx');
 const { Client } = require('whatsapp-web.js');
-const qrcode = require('qrcode-terminal');
+const qrcode = require('qrcode');
 const path = require('path');
 
 const app = express();
@@ -21,14 +21,23 @@ const upload = multer({ storage: storage });
 // Set up WhatsApp client
 const client = new Client();
 
-client.on('qr', (qr) => {
-    // Generate and display QR code in terminal
-    qrcode.generate(qr, { small: true });
-    console.log('Please scan the QR code to authenticate WhatsApp Web');
+// Store QR code data
+let qrCodeData = null;
+let isClientReady = false;
+
+client.on('qr', async (qr) => {
+    // Generate QR code as data URL
+    try {
+        qrCodeData = await qrcode.toDataURL(qr);
+    } catch (err) {
+        console.error('QR Code generation error:', err);
+    }
 });
 
 client.on('ready', () => {
     console.log('Client is ready!');
+    isClientReady = true;
+    qrCodeData = null; // Clear QR code once connected
 });
 
 // Initialize WhatsApp client
@@ -38,8 +47,20 @@ client.initialize();
 app.use(express.static('public'));
 app.use(express.json());
 
+// Route to check client status and get QR code
+app.get('/status', (req, res) => {
+    res.json({
+        isClientReady,
+        qrCode: qrCodeData
+    });
+});
+
 // Routes
 app.post('/upload', upload.single('contactFile'), async (req, res) => {
+    if (!isClientReady) {
+        return res.status(400).json({ success: false, error: 'WhatsApp client not ready' });
+    }
+
     try {
         const workbook = xlsx.readFile(req.file.path);
         const sheetName = workbook.SheetNames[0];
@@ -51,6 +72,10 @@ app.post('/upload', upload.single('contactFile'), async (req, res) => {
 });
 
 app.post('/send-messages', async (req, res) => {
+    if (!isClientReady) {
+        return res.status(400).json({ success: false, error: 'WhatsApp client not ready' });
+    }
+
     const { contacts, message } = req.body;
     const report = {
         total: contacts.length,
