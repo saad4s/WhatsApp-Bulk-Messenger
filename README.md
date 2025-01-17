@@ -24,7 +24,7 @@ Before running this application, make sure you have the following installed:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/whatsapp-bulk-messenger.git
+git clone https://github.com/saad4s/WhatsApp-Bulk-Messenger.git
 cd whatsapp-bulk-messenger
 ```
 
