@@ -113,7 +113,7 @@ Please be aware of WhatsApp's usage policies:
 
 ## Contributing
 
-We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) for details on:
+We welcome contributions! Please see our [contributing-guidelines.md](contributing-guidelines.md) for details on:
 - Code of conduct
 - Development setup
 - Pull request process
@@ -147,7 +147,7 @@ Future improvements planned:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [project-license.md](project-license.md) file for details.
 
 ## Acknowledgments
 
