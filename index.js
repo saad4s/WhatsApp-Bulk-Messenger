@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const xlsx = require('xlsx');
-const { Client } = require('whatsapp-web.js');
+const { Client, LocalAuth } = require('whatsapp-web.js');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -21,8 +21,25 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// Set up WhatsApp client
-const client = new Client();
+// Set up WhatsApp client with Puppeteer's bundled Chromium
+const client = new Client({
+    authStrategy: new LocalAuth({
+        clientId: "whatsapp-bulk-sender"
+    }),
+    puppeteer: {
+        headless: true,
+        args: [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-gpu'
+        ]
+        // Remove executablePath to use bundled Chromium
+    }
+});
 
 // Serve static files from 'public' directory
 app.use(express.static('public'));
@@ -37,9 +54,12 @@ app.get('/qr', (req, res) => {
 io.on('connection', (socket) => {
     console.log('Client connected');
 
-    // If there's an existing QR code, send it immediately
-    if (global.qrCode) {
+    if (global.qrCode && !client.authenticated) {
         socket.emit('qr', global.qrCode);
+    }
+
+    if (client.authenticated) {
+        socket.emit('ready');
     }
 
     socket.on('disconnect', () => {
@@ -49,9 +69,7 @@ io.on('connection', (socket) => {
 
 // WhatsApp client event handlers
 client.on('qr', (qr) => {
-    // Store QR code globally
     global.qrCode = qr;
-    // Emit to all connected clients
     io.emit('qr', qr);
     console.log('New QR code generated');
 });
@@ -59,12 +77,37 @@ client.on('qr', (qr) => {
 client.on('ready', () => {
     console.log('Client is ready!');
     io.emit('ready');
+    global.qrCode = null;
 });
 
-// Initialize WhatsApp client
-client.initialize();
+client.on('authenticated', () => {
+    console.log('WhatsApp authentication successful!');
+});
 
-// Routes
+client.on('auth_failure', (error) => {
+    console.error('WhatsApp authentication failed:', error);
+    global.qrCode = null;
+    io.emit('auth_failure');
+});
+
+// Add error event handler
+client.on('disconnected', (reason) => {
+    console.log('Client was disconnected:', reason);
+    io.emit('disconnected', reason);
+});
+
+// Initialize WhatsApp client with better error handling
+client.initialize()
+    .catch(err => {
+        console.error('Failed to initialize WhatsApp client:', err);
+        // Attempt to recreate the client after a delay if initialization fails
+        setTimeout(() => {
+            console.log('Attempting to reinitialize client...');
+            client.initialize();
+        }, 5000);
+    });
+
+// Routes remain the same
 app.post('/upload', upload.single('contactFile'), async (req, res) => {
     try {
         const workbook = xlsx.readFile(req.file.path);
@@ -91,7 +134,6 @@ app.post('/send-messages', async (req, res) => {
             const number = contact.phone.toString().replace(/[^\d]/g, '');
             const chatId = number + "@c.us";
 
-            // Check if the number is registered on WhatsApp
             const isRegistered = await client.isRegisteredUser(chatId);
 
             if (!isRegistered) {
