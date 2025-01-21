@@ -101,29 +101,42 @@ form.addEventListener('submit', async (e) => {
     setLoading(true);
 
     try {
-        // Upload file
+        // First upload the file and message together
         const formData = new FormData();
         formData.append('contactFile', fileInput.files[0]);
+        formData.append('message', messageInput.value.trim());
 
         const uploadResponse = await fetch('/upload', {
             method: 'POST',
             body: formData
         });
 
-        if (!uploadResponse.ok) throw new Error('File upload failed');
-        const uploadData = await uploadResponse.json();
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(errorData.error || 'File upload failed');
+        }
 
-        // Send messages
+        const uploadData = await uploadResponse.json();
+        if (!uploadData.success) {
+            throw new Error(uploadData.error || 'File processing failed');
+        }
+
+        // Then send messages
         const sendResponse = await fetch('/send-messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json'
+            },
             body: JSON.stringify({
                 contacts: uploadData.contacts,
                 message: messageInput.value.trim()
             })
         });
 
-        if (!sendResponse.ok) throw new Error('Failed to send messages');
+        if (!sendResponse.ok) {
+            throw new Error('Failed to send messages');
+        }
+
         const sendData = await sendResponse.json();
 
         // Show report
