@@ -5,113 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f0469094-aa6a-4f5f-8f7e-03e692be57ab" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Crashpad/settings.dat" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/data_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/data_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/data_2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/data_3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000002" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000003" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000004" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000005" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000006" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000007" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000008" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/f_000009" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cache/Cache_Data/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/03dbef0e6bdd42ad_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/05439c2c958e64b2_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/0a05f4c7b41fe08b_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/389a912c27c2e5ca_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/3cbd2a330983f0c1_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/4b7e8d018a57b6db_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/52890af799d1addf_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/570999fbd82eb4ad_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/58db694d5e30cfb6_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/5f061bc6f5ac3e61_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/70006358e71d94b0_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/77a0ed0c32ebe78e_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/78c410602eb11299_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/7980be0ed80583c6_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/862e8881a56bbd8d_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/89633d355008227c_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/9571ef5038444ffc_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/aae5d4dac4d6148c_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/d74f11cfdd7c17ef_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/e290021c93d0067f_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/f4875e6fc8e585fb_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/js/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/wasm/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Code Cache/wasm/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cookies" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Cookies-journal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/DawnCache/data_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/DawnCache/data_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/DawnCache/data_2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/DawnCache/data_3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/DawnCache/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/GPUCache/data_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/GPUCache/data_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/GPUCache/data_2" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/GPUCache/data_3" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/GPUCache/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000030.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000032.ldb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/CURRENT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/LOCK" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/LOG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/LOG.old" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Local Storage/leveldb/000003.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Local Storage/leveldb/CURRENT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Local Storage/leveldb/LOCK" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Local Storage/leveldb/LOG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Local Storage/leveldb/LOG.old" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Local Storage/leveldb/MANIFEST-000001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/QuotaManager" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/QuotaManager-journal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/00ee1326-08cb-4b89-9858-932e4a856919/2a2b7cbbc61290b4_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/00ee1326-08cb-4b89-9858-932e4a856919/6ea66fa5b36b4157_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/00ee1326-08cb-4b89-9858-932e4a856919/92172a9e586cee2a_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/00ee1326-08cb-4b89-9858-932e4a856919/e6039a61e4d2a504_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/00ee1326-08cb-4b89-9858-932e4a856919/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/00ee1326-08cb-4b89-9858-932e4a856919/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/54228cf5-896f-400b-8785-7f829d5238b3/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/54228cf5-896f-400b-8785-7f829d5238b3/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/CacheStorage/0bf6ab7f94a21cdc9c1649f884333ec20f40a544/index.txt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/Database/000003.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/Database/CURRENT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/Database/LOCK" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/Database/LOG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/Database/LOG.old" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/Database/MANIFEST-000001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/ScriptCache/2cc80dabc69f58b6_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/ScriptCache/2cc80dabc69f58b6_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/ScriptCache/4cb013792b196a35_0" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/ScriptCache/4cb013792b196a35_1" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/ScriptCache/index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Service Worker/ScriptCache/index-dir/the-real-index" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Session Storage/000003.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Session Storage/CURRENT" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Session Storage/LOCK" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Session Storage/LOG" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Session Storage/LOG.old" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/Session Storage/MANIFEST-000001" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/WebStorage/QuotaManager" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/WebStorage/QuotaManager-journal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/chrome_debug.log" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/databases/Databases.db" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/Default/databases/Databases.db-journal" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.wwebjs_auth/session/DevToolsActivePort" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/index.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/public/qr.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/qr.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/public/index.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -137,6 +33,9 @@
   &quot;associatedIndex&quot;: 3
 }</component>
   <component name="ProjectId" id="2ri5iEr7NB9Slg8wsTpiejk5vZf" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />

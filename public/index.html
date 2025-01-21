@@ -7,52 +7,97 @@
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 p-8">
-    <div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
-        <h1 class="text-2xl font-bold mb-6">WhatsApp Bulk Messenger</h1>
+<div class="max-w-2xl mx-auto bg-white p-6 rounded-lg shadow-md">
+    <h1 class="text-2xl font-bold mb-6">WhatsApp Bulk Messenger</h1>
 
-        <form id="messageForm" class="space-y-4">
-            <div>
-                <label class="block mb-2">Upload Contact List (Excel)</label>
-                <input type="file" id="contactFile" accept=".xlsx,.xls" class="w-full p-2 border rounded">
-            </div>
-
-            <div>
-                <label class="block mb-2">Message</label>
-                <textarea id="message" rows="4" class="w-full p-2 border rounded"></textarea>
-            </div>
-
-            <button type="submit" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
-                Send Messages
-            </button>
-        </form>
-
-        <div id="report" class="mt-6 hidden">
-            <h2 class="text-xl font-bold mb-4">Sending Report</h2>
-            <div id="reportContent" class="space-y-2"></div>
-        </div>
+    <!-- Status Messages -->
+    <div id="statusMessage" class="mb-4 p-4 rounded hidden">
     </div>
 
-    <script>
-        document.getElementById('messageForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+    <form id="messageForm" class="space-y-4">
+        <div>
+            <label for="contactFile" class="block mb-2">Upload Contact List (Excel)</label>
+            <input type="file" id="contactFile" accept=".xlsx,.xls" class="w-full p-2 border rounded" required>
+        </div>
+
+        <div>
+            <label for="message" class="block mb-2">Message</label>
+            <textarea id="message" rows="4" class="w-full p-2 border rounded resize-y" required></textarea>
+        </div>
+
+        <button type="submit" id="sendButton" class="w-full bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed">
+            Send Messages
+        </button>
+    </form>
+
+    <button id="logoutBtn" class="mt-4 w-full bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
+        Logout from WhatsApp
+    </button>
+
+    <div id="report" class="mt-6 hidden">
+        <h2 class="text-xl font-bold mb-4">Sending Report</h2>
+        <div id="reportContent"></div>
+    </div>
+</div>
+
+<script>
+    // Elements
+    const form = document.getElementById('messageForm');
+    const fileInput = document.getElementById('contactFile');
+    const messageInput = document.getElementById('message');
+    const sendButton = document.getElementById('sendButton');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const statusMessage = document.getElementById('statusMessage');
+    const reportDiv = document.getElementById('report');
+    const reportContent = document.getElementById('reportContent');
+
+    // Helper Functions
+    function showStatus(message, type = 'error') {
+        statusMessage.textContent = message;
+        statusMessage.className = `mb-4 p-4 rounded ${type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`;
+        statusMessage.classList.remove('hidden');
+        setTimeout(() => {
+            statusMessage.classList.add('hidden');
+        }, 5000);
+    }
+
+    function setLoading(isLoading) {
+        sendButton.disabled = isLoading;
+        fileInput.disabled = isLoading;
+        messageInput.disabled = isLoading;
+        sendButton.textContent = isLoading ? 'Sending...' : 'Send Messages';
+    }
+
+    // Form Submit Handler
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        setLoading(true);
+
+        try {
+            // First upload the file
+            const file = fileInput.files[0];
+            if (!file) {
+                throw new Error('Please select a file');
+            }
 
             const formData = new FormData();
-            formData.append('contactFile', document.getElementById('contactFile').files[0]);
+            formData.append('contactFile', file);
 
-            // Upload file and get contacts
             const uploadResponse = await fetch('/upload', {
                 method: 'POST',
                 body: formData
             });
-            const uploadData = await uploadResponse.json();
 
-            if (!uploadData.success) {
-                alert('Error uploading file');
-                return;
+            if (!uploadResponse.ok) {
+                throw new Error('File upload failed');
             }
 
-            // Send messages
-            const message = document.getElementById('message').value;
+            const uploadData = await uploadResponse.json();
+            if (!uploadData.success) {
+                throw new Error(uploadData.error || 'File processing failed');
+            }
+
+            // Then send the messages
             const sendResponse = await fetch('/send-messages', {
                 method: 'POST',
                 headers: {
@@ -60,35 +105,71 @@
                 },
                 body: JSON.stringify({
                     contacts: uploadData.contacts,
-                    message
+                    message: messageInput.value.trim()
                 })
             });
+
+            if (!sendResponse.ok) {
+                throw new Error('Failed to send messages');
+            }
+
             const sendData = await sendResponse.json();
 
-            // Display report
-            const reportDiv = document.getElementById('report');
-            const reportContent = document.getElementById('reportContent');
+            // Show the report
             reportDiv.classList.remove('hidden');
-
             reportContent.innerHTML = `
-                <p>Total messages: ${sendData.report.total}</p>
-                <p>Successful: ${sendData.report.successful}</p>
-                <p>Failed: ${sendData.report.failed}</p>
-                <p>Not Registered: ${sendData.report.notRegistered}</p>
-
-                <div class="mt-4">
-                    <h3 class="font-bold">Details:</h3>
-                    <ul class="list-disc pl-5">
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="p-3 bg-gray-50 rounded">
+                            <p class="font-bold">Total: ${sendData.report.total}</p>
+                        </div>
+                        <div class="p-3 bg-green-50 rounded">
+                            <p class="font-bold text-green-700">Sent: ${sendData.report.successful}</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
                         ${sendData.report.details.map(detail => `
-                            <li class="${detail.status === 'success' ? 'text-green-600' : 'text-red-600'}">
+                            <div class="p-2 ${detail.status === 'success' ? 'bg-green-50' : 'bg-red-50'} rounded">
                                 ${detail.name} (${detail.number}): ${detail.status}
-                                ${detail.error ? `- Error: ${detail.error}` : ''}
-                            </li>
+                                ${detail.error ? `<br><span class="text-red-600">${detail.error}</span>` : ''}
+                            </div>
                         `).join('')}
-                    </ul>
-                </div>
-            `;
-        });
-    </script>
+                    </div>
+                `;
+
+            showStatus('Messages sent successfully', 'success');
+            form.reset();
+
+        } catch (error) {
+            showStatus(error.message);
+            console.error('Error:', error);
+        } finally {
+            setLoading(false);
+        }
+    });
+
+    // Logout Handler
+    logoutBtn.addEventListener('click', async () => {
+        logoutBtn.disabled = true;
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST'
+            });
+
+            if (!response.ok) {
+                throw new Error('Logout failed');
+            }
+
+            const data = await response.json();
+            if (data.success) {
+                window.location.href = '/qr';
+            } else {
+                throw new Error(data.error || 'Logout failed');
+            }
+        } catch (error) {
+            showStatus(error.message);
+            logoutBtn.disabled = false;
+        }
+    });
+</script>
 </body>
 </html>
