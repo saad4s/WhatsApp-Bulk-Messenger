@@ -23,13 +23,15 @@
             background: white;
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
         }
 
-        .status {
+        #status {
             margin-top: 20px;
             padding: 10px 20px;
             border-radius: 5px;
             font-weight: bold;
+            text-align: center;
         }
 
         .connecting {
@@ -56,57 +58,71 @@
             border-radius: 5px;
             cursor: pointer;
             display: none;
+            font-size: 16px;
         }
 
         #refreshButton:hover {
             background-color: #128c7e;
         }
+
+        .instructions {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            line-height: 1.5;
+        }
     </style>
 </head>
 <body>
 <div id="qrcode"></div>
-<div id="status" class="status connecting">Checking WhatsApp connection...</div>
-<button id="refreshButton" onclick="window.location.reload()">Refresh Connection</button>
+<div id="status" class="connecting">Connecting to WhatsApp...</div>
+<button id="refreshButton" onclick="window.location.reload()">Refresh Page</button>
+<div class="instructions">
+    <p>1. Open WhatsApp on your phone</p>
+    <p>2. Tap Menu or Settings and select WhatsApp Web</p>
+    <p>3. Point your phone to this screen to capture the code</p>
+</div>
 
 <script>
     const socket = io();
     const qrContainer = document.getElementById('qrcode');
-    const statusElement = document.getElementById('status');
+    const statusDiv = document.getElementById('status');
     const refreshButton = document.getElementById('refreshButton');
     let qrcode = null;
 
     socket.on('connect', () => {
-        console.log('Connected to server');
-        statusElement.textContent = 'Checking WhatsApp connection...';
-        statusElement.className = 'status connecting';
+        statusDiv.textContent = 'Connecting to WhatsApp...';
+        statusDiv.className = 'connecting';
+        refreshButton.style.display = 'none';
     });
 
     socket.on('qr', (qr) => {
-        statusElement.textContent = 'Scan this QR code with WhatsApp';
-        statusElement.className = 'status connecting';
+        statusDiv.textContent = 'Scan this QR code with WhatsApp';
+        statusDiv.className = 'connecting';
         refreshButton.style.display = 'none';
 
-        // Clear previous QR code
-        qrContainer.innerHTML = '';
-
-        // Generate new QR code
-        qrcode = new QRCode(qrContainer, {
-            text: qr,
-            width: 256,
-            height: 256,
-            colorDark: '#000000',
-            colorLight: '#ffffff',
-            correctLevel: QRCode.CorrectLevel.H
-        });
+        if (qrcode) {
+            qrcode.clear();
+            qrcode.makeCode(qr);
+        } else {
+            qrContainer.innerHTML = '';
+            qrcode = new QRCode(qrContainer, {
+                text: qr,
+                width: 256,
+                height: 256,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        }
     });
 
     socket.on('ready', () => {
         qrContainer.innerHTML = '';
-        statusElement.textContent = 'WhatsApp Connected Successfully!';
-        statusElement.className = 'status ready';
+        statusDiv.textContent = 'WhatsApp Connected! Redirecting...';
+        statusDiv.className = 'ready';
         refreshButton.style.display = 'none';
 
-        // Redirect to main page after successful connection
         setTimeout(() => {
             window.location.href = '/';
         }, 2000);
@@ -114,15 +130,20 @@
 
     socket.on('auth_failure', () => {
         qrContainer.innerHTML = '';
-        statusElement.textContent = 'Authentication failed. Please try again.';
-        statusElement.className = 'status error';
+        statusDiv.textContent = 'Authentication failed. Please try again.';
+        statusDiv.className = 'error';
         refreshButton.style.display = 'block';
     });
 
     socket.on('disconnect', () => {
-        console.log('Disconnected from server');
-        statusElement.textContent = 'Disconnected from server...';
-        statusElement.className = 'status error';
+        statusDiv.textContent = 'Connection lost. Please refresh the page.';
+        statusDiv.className = 'error';
+        refreshButton.style.display = 'block';
+    });
+
+    window.addEventListener('error', () => {
+        statusDiv.textContent = 'An error occurred. Please refresh the page.';
+        statusDiv.className = 'error';
         refreshButton.style.display = 'block';
     });
 </script>
