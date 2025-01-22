@@ -1,3 +1,6 @@
+// Initialize Socket.io
+const socket = io();
+
 // Function to check client status and update UI
 async function checkStatus() {
     try {
@@ -6,8 +9,13 @@ async function checkStatus() {
 
         // Update status display
         const statusValue = document.getElementById('statusValue');
+        const logoutBtn = document.getElementById('logoutBtn');
+
         statusValue.textContent = data.isClientReady ? 'True' : 'False';
         statusValue.className = data.isClientReady ? 'font-medium text-green-600' : 'font-medium text-red-600';
+
+        // Show/hide logout button based on client status
+        logoutBtn.classList.toggle('hidden', !data.isClientReady);
 
         if (data.isClientReady) {
             // Hide QR section and show message section
@@ -15,7 +23,7 @@ async function checkStatus() {
             document.getElementById('messageSection').classList.remove('hidden');
         } else if (data.qrCode) {
             // Show QR code
-            document.getElementById('qrCode').innerHTML = `<img src="${data.qrCode}" alt="QR Code">`;
+            document.getElementById('qrCode').innerHTML = `<img src="${data.qrCode}" alt="QR Code" class="max-w-xs">`;
             document.getElementById('loadingText').classList.add('hidden');
         }
 
@@ -28,6 +36,17 @@ async function checkStatus() {
         setTimeout(checkStatus, 1000);
     }
 }
+
+// Socket events
+socket.on('ready', () => {
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    checkStatus();
+});
+
+socket.on('disconnected', () => {
+    document.getElementById('logoutBtn').classList.add('hidden');
+    checkStatus();
+});
 
 // Character counter functionality
 document.getElementById('message').addEventListener('input', function(e) {
@@ -75,7 +94,7 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
         const uploadData = await uploadResponse.json();
 
         if (!uploadData.success) {
-            throw new Error('Error uploading file: ' + uploadData.error);
+            throw new Error(uploadData.error || 'Error uploading file');
         }
 
         // Send messages
@@ -92,25 +111,39 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
         });
         const sendData = await sendResponse.json();
 
+        if (!sendData.success) {
+            throw new Error(sendData.error || 'Error sending messages');
+        }
+
         // Display report
         const reportDiv = document.getElementById('report');
         const reportContent = document.getElementById('reportContent');
-        reportDiv.classList.remove('hidden');
 
+        reportDiv.classList.remove('hidden');
         reportContent.innerHTML = `
-            <p>Total messages: ${sendData.report.total}</p>
-            <p>Successful: ${sendData.report.successful}</p>
-            <p>Failed: ${sendData.report.failed}</p>
-            <div class="mt-4">
-                <h3 class="font-bold">Details:</h3>
-                <ul class="list-disc pl-5">
-                    ${sendData.report.details.map(detail => `
-                        <li class="${detail.status === 'success' ? 'text-green-600' : 'text-red-600'}">
-                            ${detail.name} (${detail.number}): ${detail.status}
-                            ${detail.error ? `- Error: ${detail.error}` : ''}
-                        </li>
-                    `).join('')}
-                </ul>
+            <div class="space-y-4">
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-lg font-semibold text-green-700">Total: ${sendData.report.total}</p>
+                    </div>
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-lg font-semibold text-blue-700">Successful: ${sendData.report.successful}</p>
+                    </div>
+                    <div class="bg-red-50 p-4 rounded-lg">
+                        <p class="text-lg font-semibold text-red-700">Failed: ${sendData.report.failed}</p>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <h3 class="text-lg font-semibold mb-3">Detailed Report</h3>
+                    <ul class="space-y-2">
+                        ${sendData.report.details.map(detail => `
+                            <li class="p-3 rounded-lg ${detail.status === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}">
+                                ${detail.name} (${detail.number}): ${detail.status}
+                                ${detail.error ? `<br><span class="text-sm opacity-75">Error: ${detail.error}</span>` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
             </div>
         `;
     } catch (error) {
@@ -142,6 +175,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
             document.getElementById('loadingText').classList.remove('hidden');
             document.getElementById('qrCode').innerHTML = '';
             document.getElementById('report').classList.add('hidden');
+            document.getElementById('logoutBtn').classList.add('hidden');
 
             // Clear any existing form data
             document.getElementById('messageForm').reset();
@@ -155,6 +189,22 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
     } catch (error) {
         alert('Error logging out: ' + error.message);
     }
+});
+
+// Initialize socket event handlers
+socket.on('qr', (qr) => {
+    document.getElementById('qrCode').innerHTML = `<img src="${qr}" alt="QR Code" class="max-w-xs">`;
+    document.getElementById('loadingText').classList.add('hidden');
+});
+
+socket.on('qrDataUrl', (qrDataUrl) => {
+    document.getElementById('qrCode').innerHTML = `<img src="${qrDataUrl}" alt="QR Code" class="max-w-xs">`;
+    document.getElementById('loadingText').classList.add('hidden');
+});
+
+socket.on('auth_failure', () => {
+    alert('WhatsApp authentication failed. Please try again.');
+    checkStatus();
 });
 
 // Start checking status when page loads

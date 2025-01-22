@@ -10,65 +10,68 @@ const qrcode = require('qrcode');
 const puppeteer = require('puppeteer');
 const qrcodeTerminal = require('qrcode-terminal');
 
-// Configuration constants
+// Configuration object with environment-specific settings
 const CONFIG = {
     port: process.env.PORT || 3000,
     uploadDir: './uploads',
     messageDir: './uploads/messages',
     clientId: 'whatsapp-bulk-sender',
-    messageDelay: 1000
+    messageDelay: Number(process.env.MESSAGE_DELAY) || 1000,
+    puppeteerArgs: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+        '--disable-web-security'
+    ],
+    webVersion: '2.2318.11'
 };
 
-// Create necessary directories
-async function createDirectories() {
-    try {
-        await fs.mkdir(CONFIG.uploadDir, { recursive: true });
-        await fs.mkdir(CONFIG.messageDir, { recursive: true });
-        await fs.mkdir('./.wwebjs_auth', { recursive: true });
-        await fs.mkdir('./.wwebjs_cache', { recursive: true });
-    } catch (error) {
-        console.error('Error creating directories:', error);
+// Directory creation with error handling
+const createDirectories = async () => {
+    const dirs = [
+        CONFIG.uploadDir,
+        CONFIG.messageDir,
+        './.wwebjs_auth',
+        './.wwebjs_cache'
+    ];
+
+    await Promise.all(
+        dirs.map(dir => fs.mkdir(dir, { recursive: true }).catch(err => {
+            console.error(`Error creating directory ${dir}:`, err);
+        }))
+    );
+};
+
+// Improved WhatsApp client factory with consistent configuration
+const createWhatsAppClient = () => new Client({
+    authStrategy: new LocalAuth(),
+    puppeteer: {
+        headless: true,
+        args: CONFIG.puppeteerArgs
+    },
+    webVersion: CONFIG.webVersion,
+    webVersionCache: {
+        type: 'local',
+        path: './.wwebjs_cache'
     }
-}
-createDirectories();
+});
 
-// WhatsApp client factory
-const createWhatsAppClient = () => {
-    return new Client({
-        authStrategy: new LocalAuth(),
-        puppeteer: {
-            headless: true,
-            args: [
-                '--no-sandbox',
-                '--disable-setuid-sandbox',
-                '--disable-gpu',
-                '--disable-dev-shm-usage',
-                '--disable-accelerated-2d-canvas',
-                '--no-first-run',
-                '--no-zygote',
-                '--single-process',
-                '--disable-web-security'
-            ]
-        },
-        webVersion: '2.2318.11',
-        webVersionCache: {
-            type: 'local',
-            path: './.wwebjs_cache'
-        }
-    });
-};
-
-// Setup Express and Socket.IO
+// Express and Socket.IO setup
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Multer configuration
+// Optimized Multer configuration
 const storage = multer.diskStorage({
     destination: CONFIG.uploadDir,
     filename: (req, file, cb) => {
-        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        const filename = 'contacts-' + uniqueSuffix + path.extname(file.originalname);
+        const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+        const filename = `contacts-${uniqueSuffix}${path.extname(file.originalname)}`;
         req.uploadedFileName = filename;
         cb(null, filename);
     }
@@ -77,148 +80,150 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
-        const allowedTypes = ['.xlsx', '.xls'];
         const ext = path.extname(file.originalname).toLowerCase();
-        if (allowedTypes.includes(ext)) {
-            cb(null, true);
-        } else {
-            cb(new Error('Invalid file type. Only Excel files are allowed.'));
-        }
+        cb(null, ['.xlsx', '.xls'].includes(ext) || cb(new Error('Invalid file type. Only Excel files are allowed.')));
     }
 });
 
-// Save message function
-async function saveMessage(fileName, message, contacts) {
+// Optimized message saving with better error handling
+const saveMessage = async (fileName, message, contacts) => {
     const messageData = {
         timestamp: new Date().toISOString(),
         contactFile: fileName,
-        message: message,
+        message,
         totalContacts: contacts.length,
-        contacts: contacts
+        contacts
     };
 
     const messageFileName = `message-${path.parse(fileName).name}.json`;
     const messagePath = path.join(CONFIG.messageDir, messageFileName);
 
-    await fs.writeFile(messagePath, JSON.stringify(messageData, null, 2));
-    return messageFileName;
-}
+    try {
+        await fs.writeFile(messagePath, JSON.stringify(messageData, null, 2));
+        return messageFileName;
+    } catch (error) {
+        console.error('Error saving message:', error);
+        throw new Error('Failed to save message data');
+    }
+};
 
-// Message sending utility
+// Improved WhatsApp message sending with validation
 const sendWhatsAppMessage = async (client, contact, message) => {
     const number = contact.phone.toString().replace(/[^\d]/g, '');
-    const chatId = `${number}@c.us`;
+    if (!number) {
+        throw new Error('Invalid phone number');
+    }
 
+    const chatId = `${number}@c.us`;
     const isRegistered = await client.isRegisteredUser(chatId);
+
     if (!isRegistered) {
         throw new Error('Number not registered on WhatsApp');
     }
 
-    await client.sendMessage(chatId, message);
+    return client.sendMessage(chatId, message);
 };
 
-// Initialize WhatsApp client
-let client = createWhatsAppClient();
-let isClientReady = false;
-
-// Setup client events
+// Improved client event handling
 const setupClientEvents = (client) => {
-    client.on('qr', async (qr) => {
-        try {
-            const qrCodeDataUrl = await qrcode.toDataURL(qr);
-            global.qrCode = qr;
-            global.qrCodeDataUrl = qrCodeDataUrl;
-            io.emit('qr', qr);
-            io.emit('qrDataUrl', qrCodeDataUrl);
-            console.log('New QR code generated');
-        } catch (err) {
-            console.error('QR Code generation error:', err);
+    const events = {
+        qr: async (qr) => {
+            try {
+                const qrCodeDataUrl = await qrcode.toDataURL(qr);
+                global.qrCode = qr;
+                global.qrCodeDataUrl = qrCodeDataUrl;
+                io.emit('qr', qr);
+                io.emit('qrDataUrl', qrCodeDataUrl);
+            } catch (err) {
+                console.error('QR Code generation error:', err);
+            }
+        },
+        ready: () => {
+            console.log('Client is ready!');
+            global.isClientReady = true;
+            global.qrCode = null;
+            global.qrCodeDataUrl = null;
+            io.emit('ready');
+        },
+        authenticated: () => {
+            console.log('WhatsApp authentication successful');
+            global.isClientReady = true;
+        },
+        auth_failure: (error) => {
+            console.error('WhatsApp authentication failed:', error);
+            global.isClientReady = false;
+            global.qrCode = null;
+            global.qrCodeDataUrl = null;
+            io.emit('auth_failure');
+        },
+        disconnected: async (reason) => {
+            console.log('WhatsApp client disconnected:', reason);
+            global.isClientReady = false;
+            io.emit('disconnected', reason);
+
+            try {
+                await client.destroy();
+                const newClient = createWhatsAppClient();
+                setupClientEvents(newClient);
+                await newClient.initialize();
+                return newClient;
+            } catch (error) {
+                console.error('Error reinitializing client:', error);
+                throw error;
+            }
         }
-    });
+    };
 
-    client.on('ready', () => {
-        console.log('Client is ready!');
-        isClientReady = true;
-        global.qrCode = null;
-        global.qrCodeDataUrl = null;
-        io.emit('ready');
-    });
-
-    client.on('authenticated', () => {
-        console.log('WhatsApp authentication successful');
-        isClientReady = true;
-    });
-
-    client.on('auth_failure', (error) => {
-        console.error('WhatsApp authentication failed:', error);
-        isClientReady = false;
-        global.qrCode = null;
-        global.qrCodeDataUrl = null;
-        io.emit('auth_failure');
-    });
-
-    client.on('disconnected', async (reason) => {
-        console.log('WhatsApp client disconnected:', reason);
-        isClientReady = false;
-        io.emit('disconnected', reason);
-
-        // Cleanup and reinitialize
-        try {
-            await client.destroy();
-            client = createWhatsAppClient();
-            setupClientEvents(client);
-            await client.initialize();
-        } catch (error) {
-            console.error('Error reinitializing client:', error);
-        }
+    Object.entries(events).forEach(([event, handler]) => {
+        client.on(event, handler);
     });
 
     return client;
 };
 
+// Initialize client with retry mechanism
+let client = setupClientEvents(createWhatsAppClient());
+global.isClientReady = false;
 
-// Setup initial client with events
-setupClientEvents(client);
-
-// Initialize WhatsApp client with retry mechanism
-const initializeClient = async () => {
-    try {
-        console.log('Initializing WhatsApp client...');
-        await client.initialize();
-    } catch (error) {
-        console.error('Failed to initialize WhatsApp client:', error);
-        // Retry after 5 seconds
-        setTimeout(initializeClient, 5000);
+const initializeClient = async (retries = 3, delay = 5000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            console.log(`Initializing WhatsApp client (attempt ${i + 1}/${retries})...`);
+            await client.initialize();
+            return;
+        } catch (error) {
+            console.error(`Failed to initialize WhatsApp client (attempt ${i + 1}):`, error);
+            if (i < retries - 1) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
     }
+    throw new Error('Failed to initialize WhatsApp client after multiple attempts');
 };
 
-// Socket.IO connection handling
+// Optimized Socket.IO connection handling
 io.on('connection', (socket) => {
     console.log('Client connected');
 
-    // If we have a stored QR code and client isn't ready, send it
-    if (global.qrCodeDataUrl && !isClientReady) {
+    if (global.qrCodeDataUrl && !global.isClientReady) {
         socket.emit('qrDataUrl', global.qrCodeDataUrl);
     }
 
-    // If client is already authenticated, emit ready event
-    if (isClientReady) {
+    if (global.isClientReady) {
         socket.emit('ready');
     }
 
-    socket.on('disconnect', () => {
-        console.log('Client disconnected');
-    });
+    socket.on('disconnect', () => console.log('Client disconnected'));
 });
 
-// Express middleware
+// Express middleware and static files
 app.use(express.static('public'));
 app.use(express.json());
 
-// Routes
+// Optimized routes with better error handling
 app.get('/status', (req, res) => {
     res.json({
-        isClientReady,
+        isClientReady: global.isClientReady,
         qrCode: global.qrCodeDataUrl
     });
 });
@@ -229,29 +234,22 @@ app.get('/qr', (req, res) => {
 
 app.post('/upload', upload.single('contactFile'), async (req, res) => {
     try {
-        if (!isClientReady) {
+        if (!global.isClientReady) {
             throw new Error('WhatsApp client not ready');
         }
 
-        if (!req.file) {
-            throw new Error('No file uploaded');
-        }
-
-        const message = req.body.message;
-        if (!message) {
-            throw new Error('No message provided');
+        if (!req.file || !req.body.message) {
+            throw new Error('Missing required fields');
         }
 
         const workbook = xlsx.readFile(req.file.path);
-        const sheetName = workbook.SheetNames[0];
-        const contacts = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        const contacts = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
         if (!contacts.length) {
             throw new Error('No contacts found in the file');
         }
 
-        // Save message alongside contacts
-        const messageFileName = await saveMessage(req.file.filename, message, contacts);
+        const messageFileName = await saveMessage(req.file.filename, req.body.message, contacts);
 
         res.json({
             success: true,
@@ -272,11 +270,9 @@ app.post('/logout', async (req, res) => {
         await client.logout();
         await client.destroy();
 
-        // Create and initialize new client
-        client = createWhatsAppClient();
-        setupClientEvents(client);
+        client = setupClientEvents(createWhatsAppClient());
         await client.initialize();
-        isClientReady = false;
+        global.isClientReady = false;
 
         res.json({ success: true });
     } catch (error) {
@@ -289,7 +285,7 @@ app.post('/logout', async (req, res) => {
 });
 
 app.post('/send-messages', async (req, res) => {
-    if (!isClientReady) {
+    if (!global.isClientReady) {
         return res.status(400).json({
             success: false,
             error: 'WhatsApp client not ready'
@@ -297,20 +293,18 @@ app.post('/send-messages', async (req, res) => {
     }
 
     const { contacts, message } = req.body;
+    const report = {
+        total: contacts.length,
+        successful: 0,
+        failed: 0,
+        notRegistered: 0,
+        details: []
+    };
 
     try {
-        const report = {
-            total: contacts.length,
-            successful: 0,
-            failed: 0,
-            notRegistered: 0,
-            details: []
-        };
-
-        for (const contact of contacts) {
+        await Promise.all(contacts.map(async (contact) => {
             try {
                 await sendWhatsAppMessage(client, contact, message);
-
                 report.successful++;
                 report.details.push({
                     name: contact.name,
@@ -318,11 +312,8 @@ app.post('/send-messages', async (req, res) => {
                     status: 'success'
                 });
             } catch (error) {
-                if (error.message === 'Number not registered on WhatsApp') {
-                    report.notRegistered++;
-                } else {
                     report.failed++;
-                }
+
 
                 report.details.push({
                     name: contact.name,
@@ -331,10 +322,8 @@ app.post('/send-messages', async (req, res) => {
                     error: error.message
                 });
             }
-
-            // Add delay between messages to avoid rate limiting
             await new Promise(resolve => setTimeout(resolve, CONFIG.messageDelay));
-        }
+        }));
 
         res.json({ success: true, report });
     } catch (error) {
@@ -346,19 +335,28 @@ app.post('/send-messages', async (req, res) => {
     }
 });
 
-// Error handling middleware
+// Global error handling middleware
 app.use((err, req, res, next) => {
-    console.error(err.stack);
+    console.error('Unhandled error:', err);
     res.status(500).json({
         success: false,
-        error: 'Internal server error'
+        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : err.message
     });
 });
 
-// Start server
-server.listen(CONFIG.port, () => {
-    console.log(`Server running at http://localhost:${CONFIG.port}`);
-});
+// Initialize server and WhatsApp client
+const startServer = async () => {
+    try {
+        await createDirectories();
+        await initializeClient();
 
-// Initialize WhatsApp client
-initializeClient();
+        server.listen(CONFIG.port, () => {
+            console.log(`Server running at http://localhost:${CONFIG.port}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+};
+
+startServer();
