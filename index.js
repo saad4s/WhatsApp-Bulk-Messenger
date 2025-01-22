@@ -8,6 +8,7 @@ const socketIo = require('socket.io');
 const fs = require('fs').promises;
 const qrcode = require('qrcode');
 const puppeteer = require('puppeteer');
+const qrcodeTerminal = require('qrcode-terminal');
 
 // Configuration constants
 const CONFIG = {
@@ -23,6 +24,8 @@ async function createDirectories() {
     try {
         await fs.mkdir(CONFIG.uploadDir, { recursive: true });
         await fs.mkdir(CONFIG.messageDir, { recursive: true });
+        await fs.mkdir('./.wwebjs_auth', { recursive: true });
+        await fs.mkdir('./.wwebjs_cache', { recursive: true });
     } catch (error) {
         console.error('Error creating directories:', error);
     }
@@ -32,27 +35,26 @@ createDirectories();
 // WhatsApp client factory
 const createWhatsAppClient = () => {
     return new Client({
-        authStrategy: new LocalAuth({
-            clientId: CONFIG.clientId,
-            dataPath: './.wwebjs_auth'
-        }),
+        authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
             args: [
                 '--no-sandbox',
                 '--disable-setuid-sandbox',
+                '--disable-gpu',
                 '--disable-dev-shm-usage',
                 '--disable-accelerated-2d-canvas',
-                '--disable-gpu',
-                '--window-size=1920x1080'
-            ],
-            defaultViewport: {
-                width: 1920,
-                height: 1080
-            },
-            ignoreDefaultArgs: ['--disable-extensions']
+                '--no-first-run',
+                '--no-zygote',
+                '--single-process',
+                '--disable-web-security'
+            ]
         },
-        clientId: CONFIG.clientId
+        webVersion: '2.2318.11',
+        webVersionCache: {
+            type: 'local',
+            path: './.wwebjs_cache'
+        }
     });
 };
 
@@ -123,20 +125,11 @@ let isClientReady = false;
 const setupClientEvents = (client) => {
     client.on('qr', async (qr) => {
         try {
-            // Generate QR code as data URL
             const qrCodeDataUrl = await qrcode.toDataURL(qr);
-
-            // Store QR code globally
             global.qrCode = qr;
             global.qrCodeDataUrl = qrCodeDataUrl;
-
-            // Show QR in terminal (for debugging)
-            qrcode.generate(qr, { small: true });
-
-            // Emit to all connected clients
             io.emit('qr', qr);
             io.emit('qrDataUrl', qrCodeDataUrl);
-
             console.log('New QR code generated');
         } catch (err) {
             console.error('QR Code generation error:', err);
@@ -153,6 +146,7 @@ const setupClientEvents = (client) => {
 
     client.on('authenticated', () => {
         console.log('WhatsApp authentication successful');
+        isClientReady = true;
     });
 
     client.on('auth_failure', (error) => {
@@ -163,14 +157,25 @@ const setupClientEvents = (client) => {
         io.emit('auth_failure');
     });
 
-    client.on('disconnected', (reason) => {
+    client.on('disconnected', async (reason) => {
         console.log('WhatsApp client disconnected:', reason);
         isClientReady = false;
         io.emit('disconnected', reason);
+
+        // Cleanup and reinitialize
+        try {
+            await client.destroy();
+            client = createWhatsAppClient();
+            setupClientEvents(client);
+            await client.initialize();
+        } catch (error) {
+            console.error('Error reinitializing client:', error);
+        }
     });
 
     return client;
 };
+
 
 // Setup initial client with events
 setupClientEvents(client);
