@@ -7,6 +7,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const fs = require('fs').promises;
 const qrcode = require('qrcode');
+const puppeteer = require('puppeteer');
 
 // Configuration constants
 const CONFIG = {
@@ -14,16 +15,7 @@ const CONFIG = {
     uploadDir: './uploads',
     messageDir: './uploads/messages',
     clientId: 'whatsapp-bulk-sender',
-    messageDelay: 1000,
-    puppeteerArgs: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-gpu'
-    ]
+    messageDelay: 1000
 };
 
 // Create necessary directories
@@ -40,11 +32,27 @@ createDirectories();
 // WhatsApp client factory
 const createWhatsAppClient = () => {
     return new Client({
-        authStrategy: new LocalAuth({ clientId: CONFIG.clientId }),
+        authStrategy: new LocalAuth({
+            clientId: CONFIG.clientId,
+            dataPath: './.wwebjs_auth'
+        }),
         puppeteer: {
             headless: true,
-            args: CONFIG.puppeteerArgs
-        }
+            args: [
+                '--no-sandbox',
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage',
+                '--disable-accelerated-2d-canvas',
+                '--disable-gpu',
+                '--window-size=1920x1080'
+            ],
+            defaultViewport: {
+                width: 1920,
+                height: 1080
+            },
+            ignoreDefaultArgs: ['--disable-extensions']
+        },
+        clientId: CONFIG.clientId
     });
 };
 
