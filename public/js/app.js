@@ -1,6 +1,74 @@
 // Initialize Socket.io
 const socket = io();
 
+// Function to format date
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Function to load message history
+async function loadMessageHistory() {
+    try {
+        const historyContent = document.getElementById('historyContent');
+        historyContent.innerHTML = '<div class="loading-spinner"></div>';
+
+        const response = await fetch('/message-history');
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to load message history');
+        }
+
+        if (data.history.length === 0) {
+            historyContent.innerHTML = '<p class="text-gray-500 text-center">No message history found</p>';
+            return;
+        }
+
+        const historyHTML = data.history.map(item => `
+            <div class="history-item">
+                <div class="history-item-header">
+                    <span class="history-timestamp">${formatDate(item.timestamp)}</span>
+                </div>
+                <div class="history-message">${item.message}</div>
+                <div class="history-stats">
+                    <div class="stat-item total">
+                        <div class="font-bold">${item.report.total}</div>
+                        <div class="text-sm">Total</div>
+                    </div>
+                    <div class="stat-item success">
+                        <div class="font-bold">${item.report.successful}</div>
+                        <div class="text-sm">Successful</div>
+                    </div>
+                    <div class="stat-item failed">
+                        <div class="font-bold">${item.report.failed}</div>
+                        <div class="text-sm">Failed</div>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+
+        historyContent.innerHTML = historyHTML;
+    } catch (error) {
+        console.error('Error loading message history:', error);
+        document.getElementById('historyContent').innerHTML = `
+            <div class="text-red-500 text-center">
+                Error loading message history: ${error.message}
+            </div>
+        `;
+    }
+}
+
+
+
+
+
 // Function to check client status and update UI
 async function checkStatus() {
     try {
@@ -53,6 +121,9 @@ document.getElementById('message').addEventListener('input', function(e) {
     const charCount = e.target.value.length;
     document.getElementById('charCount').textContent = charCount;
 });
+
+// Refresh button handler
+document.getElementById('refreshHistory').addEventListener('click', loadMessageHistory);
 
 // File upload handling
 document.getElementById('contactFile').addEventListener('change', function(e) {
@@ -148,6 +219,10 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
                 </div>
             </div>
         `;
+
+
+        await loadMessageHistory();
+
     } catch (error) {
         alert(error.message);
     } finally {
@@ -207,6 +282,11 @@ socket.on('qrDataUrl', (qrDataUrl) => {
 socket.on('auth_failure', () => {
     alert('WhatsApp authentication failed. Please try again.');
     checkStatus();
+});
+
+// Load history when client is ready
+socket.on('ready', () => {
+    loadMessageHistory();
 });
 
 // Start checking status when page loads

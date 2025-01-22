@@ -9,6 +9,8 @@ const fs = require('fs').promises;
 const qrcode = require('qrcode');
 const puppeteer = require('puppeteer');
 const qrcodeTerminal = require('qrcode-terminal');
+const util = require('util');
+const readdir = fs.readdir;
 
 // Configuration object with environment-specific settings
 const CONFIG = {
@@ -92,6 +94,7 @@ const saveMessage = async (fileName, message, contacts, report) => {
         contactFile: fileName,
         message,
         totalContacts: contacts.length,
+        whatsappId: global.whatsappId,
         report: {
             total: report.total,
             successful: report.successful,
@@ -144,12 +147,19 @@ const setupClientEvents = (client) => {
                 console.error('QR Code generation error:', err);
             }
         },
-        ready: () => {
-            console.log('Client is ready!');
-            global.isClientReady = true;
-            global.qrCode = null;
-            global.qrCodeDataUrl = null;
-            io.emit('ready');
+
+        ready: async () => {
+            try {
+                const info = await client.info;
+                global.whatsappId = info.wid._serialized;
+                console.log('Client is ready!');
+                global.isClientReady = true;
+                global.qrCode = null;
+                global.qrCodeDataUrl = null;
+                io.emit('ready', { whatsappId: global.whatsappId });
+            } catch (error) {
+                console.error('Error getting WhatsApp info:', error);
+            }
         },
         authenticated: () => {
             console.log('WhatsApp authentication successful');
@@ -236,6 +246,50 @@ app.get('/status', (req, res) => {
 
 app.get('/qr', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'qr.html'));
+});
+
+app.get('/message-history', async (req, res) => {
+    try {
+        if (!global.isClientReady || !global.whatsappId) {
+            throw new Error('WhatsApp client not ready');
+        }
+
+        const files = await readdir(CONFIG.messageDir);
+        const messageHistory = [];
+
+        for (const file of files) {
+            if (file.endsWith('.json')) {
+                const filePath = path.join(CONFIG.messageDir, file);
+                const content = await fs.readFile(filePath, 'utf8');
+                const messageData = JSON.parse(content);
+
+                // Only include messages for current WhatsApp account
+                if (messageData.whatsappId === global.whatsappId) {
+                    messageHistory.push({
+                        id: file,
+                        timestamp: messageData.timestamp,
+                        message: messageData.message,
+                        totalContacts: messageData.totalContacts,
+                        report: messageData.report
+                    });
+                }
+            }
+        }
+
+        // Sort by timestamp, newest first
+        messageHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        res.json({
+            success: true,
+            history: messageHistory
+        });
+    } catch (error) {
+        console.error('Error fetching message history:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
 });
 
 app.post('/upload', upload.single('contactFile'), async (req, res) => {
