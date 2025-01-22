@@ -99,6 +99,7 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
 
         // Send messages
         const message = document.getElementById('message').value;
+        // In your app.js, modify the send-messages fetch call
         const sendResponse = await fetch('/send-messages', {
             method: 'POST',
             headers: {
@@ -106,7 +107,8 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({
                 contacts: uploadData.contacts,
-                message
+                message,
+                messageFile: uploadData.messageFile
             })
         });
         const sendData = await sendResponse.json();

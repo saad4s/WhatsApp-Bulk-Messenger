@@ -86,12 +86,18 @@ const upload = multer({
 });
 
 // Optimized message saving with better error handling
-const saveMessage = async (fileName, message, contacts) => {
+const saveMessage = async (fileName, message, contacts, report) => {
     const messageData = {
         timestamp: new Date().toISOString(),
         contactFile: fileName,
         message,
         totalContacts: contacts.length,
+        report: {
+            total: report.total,
+            successful: report.successful,
+            failed: report.failed,
+            details: report.details
+        },
         contacts
     };
 
@@ -249,12 +255,20 @@ app.post('/upload', upload.single('contactFile'), async (req, res) => {
             throw new Error('No contacts found in the file');
         }
 
-        const messageFileName = await saveMessage(req.file.filename, req.body.message, contacts);
+        // Initial report with no messages sent yet
+        const initialReport = {
+            total: contacts.length,
+            successful: 0,
+            failed: 0,
+            details: []
+        };
+
+        const messageFileName = await saveMessage(req.file.filename, req.body.message, contacts, initialReport);
 
         res.json({
             success: true,
             contacts,
-            messageFile: messageFileName
+            messageFile: req.file.filename  // Send the original filename
         });
     } catch (error) {
         console.error('Upload error:', error);
@@ -292,12 +306,11 @@ app.post('/send-messages', async (req, res) => {
         });
     }
 
-    const { contacts, message } = req.body;
+    const { contacts, message, messageFile } = req.body;
     const report = {
         total: contacts.length,
         successful: 0,
         failed: 0,
-        notRegistered: 0,
         details: []
     };
 
@@ -309,21 +322,24 @@ app.post('/send-messages', async (req, res) => {
                 report.details.push({
                     name: contact.name,
                     number: contact.phone,
-                    status: 'success'
+                    status: 'success',
+                    timestamp: new Date().toISOString()
                 });
             } catch (error) {
-                    report.failed++;
-
-
+                report.failed++;
                 report.details.push({
                     name: contact.name,
                     number: contact.phone,
                     status: 'failed',
-                    error: error.message
+                    error: error.message,
+                    timestamp: new Date().toISOString()
                 });
             }
             await new Promise(resolve => setTimeout(resolve, CONFIG.messageDelay));
         }));
+
+        // Save the updated report to the message file
+        await saveMessage(messageFile, message, contacts, report);
 
         res.json({ success: true, report });
     } catch (error) {
