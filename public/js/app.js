@@ -123,5 +123,39 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
     }
 });
 
+// Logout functionality
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+    if (!confirm('Are you sure you want to logout from WhatsApp?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch('/logout', {
+            method: 'POST'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            // Reset UI state
+            document.getElementById('messageSection').classList.add('hidden');
+            document.getElementById('qrSection').classList.remove('hidden');
+            document.getElementById('loadingText').classList.remove('hidden');
+            document.getElementById('qrCode').innerHTML = '';
+            document.getElementById('report').classList.add('hidden');
+
+            // Clear any existing form data
+            document.getElementById('messageForm').reset();
+            document.querySelector('.file-info').classList.add('hidden');
+
+            // Restart status checking
+            checkStatus();
+        } else {
+            throw new Error(data.error || 'Failed to logout');
+        }
+    } catch (error) {
+        alert('Error logging out: ' + error.message);
+    }
+});
+
 // Start checking status when page loads
 checkStatus();
