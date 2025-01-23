@@ -14,6 +14,9 @@ function formatDate(dateString) {
 }
 
 async function deleteMessage(messageId) {
+    if (!confirm('Are you sure you want to delete this message?')) {
+        return;
+    }
     try {
         const response = await fetch(`/message-history/${messageId}`, {
             method: 'DELETE'
@@ -31,12 +34,19 @@ async function deleteMessage(messageId) {
     }
 }
 
+// Function to show contact details modal
 function showContactDetails(details, type) {
+    // Remove any existing modal
+    const existingModal = document.getElementById('contactModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+
     const modalHTML = `
         <div id="contactModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div class="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[80vh] flex flex-col">
                 <div class="p-4 border-b border-gray-200 flex justify-between items-center">
-                    <h3 class="text-xl font-bold">${type} Contacts</h3>
+                    <h3 class="text-xl font-bold">${type} Contacts (${details.length})</h3>
                     <button onclick="document.getElementById('contactModal').remove()" class="text-gray-500 hover:text-gray-700">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -46,15 +56,11 @@ function showContactDetails(details, type) {
                 <div class="p-4 overflow-auto">
                     <div class="space-y-2">
                         ${details.map(contact => `
-                            <div class="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
-                                <div>
-                                    <div class="font-medium">${contact.name}</div>
-                                    <div class="text-gray-600">${contact.number}</div>
-                                </div>
+                            <div class="p-3 ${contact.status === 'success' ? 'bg-green-50' : 'bg-red-50'} rounded-lg">
+                                <div class="font-medium">${contact.name}</div>
+                                <div class="text-gray-600">${contact.number}</div>
                                 ${contact.error ? `
-                                    <div class="text-red-500 text-sm max-w-xs text-right">
-                                        ${contact.error}
-                                    </div>
+                                    <div class="text-red-500 text-sm mt-1">${contact.error}</div>
                                 ` : ''}
                             </div>
                         `).join('')}
@@ -92,39 +98,51 @@ async function loadMessageHistory() {
             return;
         }
 
-        const historyHTML = data.history.map(item => `
-            <div class="history-item" data-id="${item.id}">
-                <div class="history-item-header">
-                    <span class="history-timestamp">${formatDate(item.timestamp)}</span>
-                    <button 
-                        onclick="if(confirm('Are you sure you want to delete this message?')) deleteMessage('${item.id}')"
-                        class="text-red-500 hover:text-red-700 flex items-center gap-1"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
-                        </svg>
-                        Delete
-                    </button>
-                </div>
-                <div class="history-message">${item.message}</div>
-                <div class="history-stats">
-                    <div class="stat-item total">
-                        <div class="font-bold">${item.report.total}</div>
-                        <div class="text-sm">Total</div>
-                    </div>
-                    <div class="stat-item success cursor-pointer" 
-                         onclick="showContactDetails(${JSON.stringify(item.report.details.filter(d => d.status === 'success'))}, 'Successful')">
-                        <div class="font-bold">${item.report.successful}</div>
-                        <div class="text-sm">Successful</div>
-                    </div>
-                    <div class="stat-item failed cursor-pointer"
-                         onclick="showContactDetails(${JSON.stringify(item.report.details.filter(d => d.status === 'failed'))}, 'Failed')">
-                        <div class="font-bold">${item.report.failed}</div>
-                        <div class="text-sm">Failed</div>
-                    </div>
-                </div>
+        const historyHTML = data.history.map(item => {
+            const successDetails = item.report.details.filter(d => d.status === 'success');
+            const failedDetails = item.report.details.filter(d => d.status === 'failed');
+
+            return `
+        <div class="history-item">
+            <div class="history-item-header">
+                <span class="history-timestamp">${formatDate(item.timestamp)}</span>
+                <button 
+                    type="button"
+                    onclick="deleteMessage('${item.id}')"
+                    class="delete-btn text-red-500 hover:text-red-700 flex items-center gap-1"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                    Delete
+                </button>
             </div>
-        `).join('');
+            <div class="history-message">${item.message}</div>
+            <div class="history-stats">
+                <div class="stat-item-total">
+                    <div class="font-bold">${item.report.total}</div>
+                    <div class="text-sm">Total</div>
+                </div>
+                <button 
+                    type="button"
+                    class="stat-item success cursor-pointer" 
+                    onclick="showContactDetails(${JSON.stringify(successDetails).replace(/'/g, "&apos;")}, 'Successful')"
+                >
+                    <div class="font-bold">${item.report.successful}</div>
+                    <div class="text-sm">Successful</div>
+                </button>
+                <button 
+                    type="button"
+                    class="stat-item failed cursor-pointer"
+                    onclick="showContactDetails(${JSON.stringify(failedDetails).replace(/'/g, "&apos;")}, 'Failed')"
+                >
+                    <div class="font-bold">${item.report.failed}</div>
+                    <div class="text-sm">Failed</div>
+                </button>
+            </div>
+        </div>
+    `;
+        }).join('');
 
         historyContent.innerHTML = historyHTML;
     } catch (error) {

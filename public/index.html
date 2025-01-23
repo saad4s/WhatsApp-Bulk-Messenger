@@ -74,6 +74,8 @@
                         </div>
                     </div>
 
+
+
                     <button type="submit" id="sendButton" class="send-button w-full">
                             <span class="button-text flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
@@ -83,7 +85,15 @@
                             </span>
                         <div class="loading-spinner hidden"></div>
                     </button>
+                    <div class="message-history-card">
 
+                    </div>
+                    <div id="report" class="report-section hidden animate__animated animate__fadeIn">
+
+                            <h2 class="text-xl font-bold">Sending Report</h2>
+
+                        <div id="reportContent" class="space-y-2"></div>
+                    </div>
                     <div class="message-history-card">
                         <header class="history-header">
                             <h2 class="text-xl font-bold">Message History</h2>
@@ -102,10 +112,7 @@
                 </form>
             </main>
 
-            <div id="report" class="report-section hidden animate__animated animate__fadeIn">
-                <h2 class="text-xl font-bold mb-4">Sending Report</h2>
-                <div id="reportContent" class="space-y-2"></div>
-            </div>
+
         </div>
     <div>
         <button id="logoutBtn" class="hidden fixed top-8 right-8 w-12 h-12 bg-red-500 text-white rounded-full hover:bg-red-600 flex items-center justify-center transition-all duration-300 hover:shadow-lg z-50">
