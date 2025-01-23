@@ -101,6 +101,7 @@ async function loadMessageHistory() {
         const historyHTML = data.history.map(item => {
             const successDetails = item.report.details.filter(d => d.status === 'success');
             const failedDetails = item.report.details.filter(d => d.status === 'failed');
+            const totalDetails = item.report.details;
 
             return `
         <div class="history-item">
@@ -119,26 +120,23 @@ async function loadMessageHistory() {
             </div>
             <div class="history-message">${item.message}</div>
             <div class="history-stats">
-                <div class="stat-item-total">
+                <div class="stat-item total cursor-pointer" 
+                     onclick='showContactDetails(${JSON.stringify(totalDetails).replace(/'/g, "&apos;")}, "Total")'>
                     <div class="font-bold">${item.report.total}</div>
                     <div class="text-sm">Total</div>
                 </div>
-                <button 
-                    type="button"
-                    class="stat-item success cursor-pointer" 
-                    onclick="showContactDetails(${JSON.stringify(successDetails).replace(/'/g, "&apos;")}, 'Successful')"
-                >
+                <div class="stat-item success cursor-pointer" 
+                     onclick='showContactDetails(${JSON.stringify(successDetails).replace(/'/g, "&apos;")}, "Successful")'>
                     <div class="font-bold">${item.report.successful}</div>
                     <div class="text-sm">Successful</div>
-                </button>
-                <button 
-                    type="button"
-                    class="stat-item failed cursor-pointer"
-                    onclick="showContactDetails(${JSON.stringify(failedDetails).replace(/'/g, "&apos;")}, 'Failed')"
-                >
+                    
+                </div>
+                <div class="stat-item failed cursor-pointer"
+                     onclick='showContactDetails(${JSON.stringify(failedDetails).replace(/'/g, "&apos;")}, "Failed")'>
                     <div class="font-bold">${item.report.failed}</div>
                     <div class="text-sm">Failed</div>
-                </button>
+                  
+                </div>
             </div>
         </div>
     `;
