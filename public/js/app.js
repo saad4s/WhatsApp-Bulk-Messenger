@@ -119,7 +119,10 @@ document.getElementById('message').addEventListener('input', function(e) {
 });
 
 // Refresh button handler
-document.getElementById('refreshHistory').addEventListener('click', loadMessageHistory);
+document.getElementById('refreshHistory').addEventListener('click', function(e) {
+    e.preventDefault(); // Prevent form submission
+    loadMessageHistory();
+});
 
 // File upload handling
 document.getElementById('contactFile').addEventListener('change', function(e) {
@@ -162,7 +165,8 @@ document.getElementById('templateSelect').addEventListener('change', function() 
     }
 });
 
-document.getElementById('editTemplate').addEventListener('click', function() {
+document.getElementById('editTemplate').addEventListener('click', function(e) {
+    e.preventDefault(); // Prevent form submission
     const selectedTemplate = document.getElementById('templateSelect').value;
     if (selectedTemplate) {
         const template = templates.find(t => t.name === selectedTemplate);
@@ -191,18 +195,20 @@ document.getElementById('saveTemplate').addEventListener('click', async function
     }
 });
 
-document.getElementById('deleteTemplate').addEventListener('click', async function() {
+document.getElementById('deleteTemplate').addEventListener('click', function(e) {
+    e.preventDefault(); // Prevent form submission
     const selectedTemplate = document.getElementById('templateSelect').value;
     if (selectedTemplate) {
         if (!confirm('Are you sure you want to delete this template?')) {
             return;
         }
         try {
-            const response = await fetch(`/template/${selectedTemplate}`, {
+            fetch(`/template/${selectedTemplate}`, {
                 method: 'DELETE'
-            });
-            const data = await response.json();
-            updateTemplateList(data.templates);
+            })
+            .then(response => response.json())
+            .then(data => updateTemplateList(data.templates))
+            .catch(error => alert('Error deleting template: ' + error.message));
         } catch (error) {
             alert('Error deleting template: ' + error.message);
         }
