@@ -469,6 +469,34 @@ app.use((err, req, res, next) => {
     });
 });
 
+app.delete('/message-history/:messageId', async (req, res) => {
+    try {
+        if (!global.isClientReady) {
+            throw new Error('WhatsApp client not ready');
+        }
+
+        const messageFile = path.join(CONFIG.messageDir, req.params.messageId);
+
+        // Verify the file exists and belongs to current user
+        const fileContent = await fs.readFile(messageFile, 'utf8');
+        const messageData = JSON.parse(fileContent);
+
+        if (messageData.whatsappId !== global.whatsappId) {
+            throw new Error('Unauthorized access');
+        }
+
+        await fs.unlink(messageFile);
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error deleting message:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
 // Initialize server and WhatsApp client
 const startServer = async () => {
     try {

@@ -255,18 +255,22 @@ textarea:focus {
 }
 
 #reportContent li {
-    padding: 0.5rem 0;
+    padding: 1rem 1rem;
     font-size: 0.95rem;
 }
 
 #logoutBtn {
     background: #ef4444;
     color: white;
-    padding: 0.875rem 1.5rem;
-    border-radius: 0.75rem;
+    width: 3rem; /* Set width to make it circular */
+    height: 3rem; /* Set height to make it circular */
+    border-radius: 50%; /* Make it circular */
     font-weight: 500;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    display: flex; /* Center the icon */
+    align-items: center; /* Center the icon */
+    justify-content: center; /* Center the icon */
 }
 
 #logoutBtn:hover {
@@ -334,7 +338,7 @@ textarea:focus {
 }
 
 .refresh-button {
-    display: flex;
+    display: none;
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem 1rem;
@@ -369,7 +373,21 @@ textarea:focus {
     display: flex;
     justify-content: space-between;
     margin-bottom: 0.5rem;
+    align-items: center;
+
 }
+
+.history-item-header button {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.375rem;
+    transition: all 0.2s;
+}
+
+
+.history-item-header button:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
 
 .history-timestamp {
     color: #64748b;
@@ -389,10 +407,27 @@ textarea:focus {
 }
 
 .stat-item {
-    padding: 0.5rem;
+    padding: 1.3rem 0 1.3rem 0;
     border-radius: 0.375rem;
     text-align: center;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+
 }
+
+.stat-item:hover::after {
+    content: 'Click to view';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.1);
+    padding: 2px;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
 
 .stat-item.total {
     background: #f1f5f9;
