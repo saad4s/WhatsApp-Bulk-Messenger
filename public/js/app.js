@@ -65,10 +65,6 @@ async function loadMessageHistory() {
     }
 }
 
-
-
-
-
 // Function to check client status and update UI
 async function checkStatus() {
     try {
@@ -139,6 +135,96 @@ document.getElementById('removeFile').addEventListener('click', function() {
     document.querySelector('.file-info').classList.add('hidden');
 });
 
+// Image upload handling
+document.getElementById('imageUpload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('imagePreview').src = e.target.result;
+            document.querySelector('.image-preview').classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+document.getElementById('removeImage').addEventListener('click', function() {
+    document.getElementById('imageUpload').value = '';
+    document.getElementById('imagePreview').src = '';
+    document.querySelector('.image-preview').classList.add('hidden');
+});
+
+// Template management
+document.getElementById('templateSelect').addEventListener('change', function() {
+    const selectedTemplate = templates.find(t => t.name === this.value);
+    if (selectedTemplate) {
+        document.getElementById('message').value = selectedTemplate.content;
+    }
+});
+
+document.getElementById('editTemplate').addEventListener('click', function() {
+    const selectedTemplate = document.getElementById('templateSelect').value;
+    if (selectedTemplate) {
+        const template = templates.find(t => t.name === selectedTemplate);
+        document.getElementById('templateName').value = template.name;
+        document.getElementById('templateContent').value = template.content;
+        document.querySelector('.template-form').classList.remove('hidden');
+    }
+});
+
+document.getElementById('saveTemplate').addEventListener('click', async function() {
+    const name = document.getElementById('templateName').value;
+    const content = document.getElementById('templateContent').value;
+    if (name && content) {
+        try {
+            const response = await fetch('/template', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, content })
+            });
+            const data = await response.json();
+            updateTemplateList(data.templates);
+            document.querySelector('.template-form').classList.add('hidden');
+        } catch (error) {
+            alert('Error saving template: ' + error.message);
+        }
+    }
+});
+
+document.getElementById('deleteTemplate').addEventListener('click', async function() {
+    const selectedTemplate = document.getElementById('templateSelect').value;
+    if (selectedTemplate) {
+        if (!confirm('Are you sure you want to delete this template?')) {
+            return;
+        }
+        try {
+            const response = await fetch(`/template/${selectedTemplate}`, {
+                method: 'DELETE'
+            });
+            const data = await response.json();
+            updateTemplateList(data.templates);
+        } catch (error) {
+            alert('Error deleting template: ' + error.message);
+        }
+    }
+});
+
+async function updateTemplateList(templates) {
+    const select = document.getElementById('templateSelect');
+    select.innerHTML = '<option value="">Select a template</option>';
+    templates.forEach(template => {
+        const option = document.createElement('option');
+        option.value = template.name;
+        option.textContent = template.name;
+        select.appendChild(option);
+    });
+}
+
+// Fetch templates on load
+fetch('/templates')
+    .then(response => response.json())
+    .then(data => updateTemplateList(data.templates));
+
 // Form submission
 document.getElementById('messageForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -146,6 +232,11 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
     const formData = new FormData();
     formData.append('contactFile', document.getElementById('contactFile').files[0]);
     formData.append('message', document.getElementById('message').value);
+    
+    const imageFile = document.getElementById('imageUpload').files[0];
+    if (imageFile) {
+        formData.append('imageFile', imageFile);
+    }
 
     // Show loading state
     const sendButton = document.getElementById('sendButton');
@@ -162,15 +253,15 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
             method: 'POST',
             body: formData
         });
-        const uploadData = await uploadResponse.json();
 
-        if (!uploadData.success) {
-            throw new Error(uploadData.error || 'Error uploading file');
+        if (!uploadResponse.ok) {
+            const errorData = await uploadResponse.json();
+            throw new Error(errorData.error || 'Error uploading file');
         }
 
+        const uploadData = await uploadResponse.json();
+
         // Send messages
-        const message = document.getElementById('message').value;
-        // In your app.js, modify the send-messages fetch call
         const sendResponse = await fetch('/send-messages', {
             method: 'POST',
             headers: {
@@ -178,15 +269,18 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
             },
             body: JSON.stringify({
                 contacts: uploadData.contacts,
-                message,
-                messageFile: uploadData.messageFile
+                message: document.getElementById('message').value,
+                messageFile: uploadData.messageFile,
+                imageFile: uploadData.imageFile // Pass the image filename if it exists
             })
         });
-        const sendData = await sendResponse.json();
 
-        if (!sendData.success) {
-            throw new Error(sendData.error || 'Error sending messages');
+        if (!sendResponse.ok) {
+            const errorData = await sendResponse.json();
+            throw new Error(errorData.error || 'Error sending messages');
         }
+
+        const sendData = await sendResponse.json();
 
         // Display report
         const reportDiv = document.getElementById('report');
@@ -219,7 +313,6 @@ document.getElementById('messageForm').addEventListener('submit', async (e) => {
                 </div>
             </div>
         `;
-
 
         await loadMessageHistory();
 
@@ -257,6 +350,7 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
             // Clear any existing form data
             document.getElementById('messageForm').reset();
             document.querySelector('.file-info').classList.add('hidden');
+            document.querySelector('.image-preview').classList.add('hidden');
 
             // Restart status checking
             checkStatus();

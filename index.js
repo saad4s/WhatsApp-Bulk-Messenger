@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const xlsx = require('xlsx');
-const { Client, LocalAuth } = require('whatsapp-web.js');
+const { Client, LocalAuth, MessageMedia } = require('whatsapp-web.js');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -68,12 +68,12 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-// Optimized Multer configuration
+// Optimized Multer configuration for file and image uploads
 const storage = multer.diskStorage({
     destination: CONFIG.uploadDir,
     filename: (req, file, cb) => {
         const uniqueSuffix = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
-        const filename = `contacts-${uniqueSuffix}${path.extname(file.originalname)}`;
+        const filename = `${file.fieldname}-${uniqueSuffix}${path.extname(file.originalname)}`;
         req.uploadedFileName = filename;
         cb(null, filename);
     }
@@ -83,8 +83,53 @@ const upload = multer({
     storage,
     fileFilter: (req, file, cb) => {
         const ext = path.extname(file.originalname).toLowerCase();
-        cb(null, ['.xlsx', '.xls'].includes(ext) || cb(new Error('Invalid file type. Only Excel files are allowed.')));
+        if (['.xlsx', '.xls', '.png', '.jpg', '.jpeg'].includes(ext)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only Excel and image files are allowed.'));
+        }
     }
+});
+
+// Template storage (in-memory for now)
+let templates = [];
+
+// Add a new template
+app.post('/template', (req, res) => {
+    const { name, content } = req.body;
+    if (!name || !content) {
+        return res.status(400).json({ success: false, error: 'Name and content are required' });
+    }
+    templates.push({ name, content });
+    res.json({ success: true, templates });
+});
+
+// Get all templates
+app.get('/templates', (req, res) => {
+    res.json({ success: true, templates });
+});
+
+// Update a template
+app.put('/template/:name', (req, res) => {
+    const { name } = req.params;
+    const { content } = req.body;
+    const template = templates.find(t => t.name === name);
+    if (!template) {
+        return res.status(404).json({ success: false, error: 'Template not found' });
+    }
+    template.content = content;
+    res.json({ success: true, templates });
+});
+
+// Delete a template
+app.delete('/template/:name', (req, res) => {
+    const { name } = req.params;
+    const index = templates.findIndex(t => t.name === name);
+    if (index === -1) {
+        return res.status(404).json({ success: false, error: 'Template not found' });
+    }
+    templates.splice(index, 1);
+    res.json({ success: true, templates });
 });
 
 // Optimized message saving with better error handling
@@ -116,8 +161,8 @@ const saveMessage = async (fileName, message, contacts, report) => {
     }
 };
 
-// Improved WhatsApp message sending with validation
-const sendWhatsAppMessage = async (client, contact, message) => {
+// Improved WhatsApp message sending with validation and image support
+const sendWhatsAppMessage = async (client, contact, message, imagePath) => {
     const number = contact.phone.toString().replace(/[^\d]/g, '');
     if (!number) {
         throw new Error('Invalid phone number');
@@ -130,7 +175,12 @@ const sendWhatsAppMessage = async (client, contact, message) => {
         throw new Error('Number not registered on WhatsApp');
     }
 
-    return client.sendMessage(chatId, message);
+    if (imagePath) {
+        const media = MessageMedia.fromFilePath(imagePath);
+        return client.sendMessage(chatId, media, { caption: message });
+    } else {
+        return client.sendMessage(chatId, message);
+    }
 };
 
 // Improved client event handling
@@ -292,17 +342,20 @@ app.get('/message-history', async (req, res) => {
     }
 });
 
-app.post('/upload', upload.single('contactFile'), async (req, res) => {
+app.post('/upload', upload.fields([
+    { name: 'contactFile', maxCount: 1 },
+    { name: 'imageFile', maxCount: 1 }
+]), async (req, res) => {
     try {
         if (!global.isClientReady) {
             throw new Error('WhatsApp client not ready');
         }
 
-        if (!req.file || !req.body.message) {
+        if (!req.files['contactFile'] || !req.body.message) {
             throw new Error('Missing required fields');
         }
 
-        const workbook = xlsx.readFile(req.file.path);
+        const workbook = xlsx.readFile(req.files['contactFile'][0].path);
         const contacts = xlsx.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]);
 
         if (!contacts.length) {
@@ -317,12 +370,13 @@ app.post('/upload', upload.single('contactFile'), async (req, res) => {
             details: []
         };
 
-        const messageFileName = await saveMessage(req.file.filename, req.body.message, contacts, initialReport);
+        const messageFileName = await saveMessage(req.files['contactFile'][0].filename, req.body.message, contacts, initialReport);
 
         res.json({
             success: true,
             contacts,
-            messageFile: req.file.filename  // Send the original filename
+            messageFile: req.files['contactFile'][0].filename,
+            imageFile: req.files['imageFile'] ? req.files['imageFile'][0].filename : null
         });
     } catch (error) {
         console.error('Upload error:', error);
@@ -360,7 +414,7 @@ app.post('/send-messages', async (req, res) => {
         });
     }
 
-    const { contacts, message, messageFile } = req.body;
+    const { contacts, message, messageFile, imageFile } = req.body;
     const report = {
         total: contacts.length,
         successful: 0,
@@ -371,7 +425,8 @@ app.post('/send-messages', async (req, res) => {
     try {
         await Promise.all(contacts.map(async (contact) => {
             try {
-                await sendWhatsAppMessage(client, contact, message);
+                const imagePath = imageFile ? path.join(CONFIG.uploadDir, imageFile) : null;
+                await sendWhatsAppMessage(client, contact, message, imagePath);
                 report.successful++;
                 report.details.push({
                     name: contact.name,

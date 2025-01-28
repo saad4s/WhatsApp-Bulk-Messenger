@@ -43,6 +43,24 @@
             <!-- Message Form Section -->
             <main id="messageSection" class="messenger-content hidden animate__animated animate__fadeIn">
                 <form id="messageForm" class="space-y-8">
+                    <!-- Template Management -->
+                    <div class="template-section">
+                        <h2 class="text-xl font-bold mb-4">Message Templates</h2>
+                        <div class="template-list">
+                            <select id="templateSelect" class="w-full p-2 border rounded">
+                                <option value="">Select a template</option>
+                            </select>
+                            <button id="editTemplate" class="mt-2 p-2 bg-blue-500 text-white rounded">Edit Template</button>
+                            <button id="deleteTemplate" class="mt-2 p-2 bg-red-500 text-white rounded">Delete Template</button>
+                        </div>
+                        <div class="template-form hidden">
+                            <input type="text" id="templateName" placeholder="Template Name" class="w-full p-2 border rounded">
+                            <textarea id="templateContent" rows="4" placeholder="Template Content" class="w-full p-2 border rounded mt-2"></textarea>
+                            <button id="saveTemplate" class="mt-2 p-2 bg-green-500 text-white rounded">Save Template</button>
+                        </div>
+                    </div>
+
+                    <!-- File Upload Section -->
                     <div class="file-upload-section">
                         <label for="contactFile" class="file-upload-label group">
                             <div class="upload-icon">
@@ -60,30 +78,51 @@
                         </div>
                     </div>
 
+                    <!-- Image Upload Section -->
+                    <div class="image-upload-section">
+                        <label for="imageUpload" class="file-upload-label group">
+                            <div class="upload-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" class="w-8 h-8">
+                                    <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
+                                </svg>
+                            </div>
+                            <span class="text-lg font-semibold text-gray-700 group-hover:text-green-600 transition-colors">Upload Image</span>
+                            <small class="text-gray-500">Drag & drop or click to browse</small>
+                        </label>
+                        <input type="file" id="imageUpload" accept=".png,.jpg,.jpeg">
+                        <div class="image-preview hidden">
+                            <img id="imagePreview" src="" alt="Image Preview" class="w-32 h-32 object-cover">
+                            <button type="button" id="removeImage" class="remove-file" aria-label="Remove image">×</button>
+                        </div>
+                    </div>
+
+                    <!-- Message Input Section -->
                     <div class="message-section">
                         <label for="message" class="text-gray-700 font-medium">Message Template</label>
                         <textarea
-                                id="message"
-                                rows="4"
-                                required
-                                placeholder="Enter your message here..."
-                                class="focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+                            id="message"
+                            rows="4"
+                            required
+                            placeholder="Enter your message here..."
+                            class="focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
                         ></textarea>
                         <div class="message-counter">
                             <span id="charCount">0</span>/1000 characters
                         </div>
                     </div>
 
+                    <!-- Send Button -->
                     <button type="submit" id="sendButton" class="send-button w-full">
-                            <span class="button-text flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
-                                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                                </svg>
-                                Send Messages
-                            </span>
+                        <span class="button-text flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                            </svg>
+                            Send Messages
+                        </span>
                         <div class="loading-spinner hidden"></div>
                     </button>
 
+                    <!-- Message History Section -->
                     <div class="message-history-card">
                         <header class="history-header">
                             <h2 class="text-xl font-bold">Message History</h2>
@@ -98,10 +137,10 @@
                             <div class="loading-spinner"></div>
                         </div>
                     </div>
-
                 </form>
             </main>
 
+            <!-- Report Section -->
             <div id="report" class="report-section hidden animate__animated animate__fadeIn">
                 <h2 class="text-xl font-bold mb-4">Sending Report</h2>
                 <div id="reportContent" class="space-y-2"></div>
